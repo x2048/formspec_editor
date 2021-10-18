@@ -11,18 +11,26 @@ minetest.register_alias("mapgen_water_source", "air")
 local modpath = minetest.get_modpath("formspec_edit")
 
 local insecure_env = minetest.request_insecure_environment()
-if not insecure_env then
-	error("[formspec_editor] Cannot access insecure environment!\n"..
+local _io = io
+if insecure_env then
+	_io = insecure_env.io
+else
+  minetest.chat_send_all("[formspec_editor] Cannot access insecure environment!\n"..
+        "Editor will only work with files in "..minetest.get_worldpath().."\n"..
 	      "Please add 'formspec_edit' to your list of trusted mods in your settings")
 end
 
-local io = insecure_env.io
+local io = _io
 local update_time = tonumber(minetest.settings:get("formspec_editor.update_time")) or 0.2
 
 --Load provided file if present
 local filepath = minetest.settings:get("formspec_editor.file_path")
 if not filepath or filepath == "" then
 	filepath = modpath .. "/formspec.spec"
+end
+
+if not insecure_env and filepath.sub(1, minetest.get_worldpath():len()) ~= minetest.get_worldpath() then
+	filepath = minetest.get_worldpath().."/formspec.spec"
 end
 
 --Get styling presets
